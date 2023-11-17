@@ -35,7 +35,7 @@ struct UploadPostView: View {
             }
             .padding(.horizontal)
             HStack(spacing: 8){
-                Image("velo")
+                Image("user")
                     .resizable()
                     .frame(width: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/,height: 100)
                 TextField("Enter your caption", text: $caption,axis: .vertical)

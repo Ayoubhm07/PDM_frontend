@@ -12,16 +12,10 @@ struct ProfileView: View {
     @Namespace var animation
     @Environment(\.colorScheme) var scheme
     @State var topHeaderOffset: CGFloat = 0
+    let images = ["user", "user", "user", "user", "user", "user", "user", "image8", "user"]
     
     var body: some View {
-        //        NavigationView {
-        //            Text("Your content view goes here")
-        //                .navigationBarTitle("Profile", displayMode: .inline )
-        //                .onAppear{
-        //                    UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        //                }
-        //        }
-        //    }
+      
         VStack{
             HStack(spacing: 15){
                 Button(action: /*@START_MENU_TOKEN@*/{}/*@END_MENU_TOKEN@*/, label: {
@@ -50,8 +44,9 @@ struct ProfileView: View {
                 Divider()
                 HStack{
                     Button(action: /*@START_MENU_TOKEN@*/{}/*@END_MENU_TOKEN@*/, label: {
-                        Image("logo")
+                        Image("user")
                             .resizable()
+                            .clipShape(/*@START_MENU_TOKEN@*/Circle()/*@END_MENU_TOKEN@*/)
                             .aspectRatio(contentMode: /*@START_MENU_TOKEN@*/.fill/*@END_MENU_TOKEN@*/)
                             .frame(width: 70, height: 70)
                             .overlay(
@@ -78,7 +73,7 @@ struct ProfileView: View {
                             .font(.title2)
                             .fontWeight(/*@START_MENU_TOKEN@*/.bold/*@END_MENU_TOKEN@*/)
                             .foregroundColor(.primary)
-                        Text("Following")
+                        Text("Friends")
                             .foregroundColor(.gray)
                     }
                     .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/)
@@ -123,48 +118,40 @@ struct ProfileView: View {
                 }
                 .padding([.horizontal, .top])
                 
-                ScrollView(.horizontal, showsIndicators: false, content: {
-                    HStack(spacing: 15){
-                        Button(action: /*@START_MENU_TOKEN@*/{}/*@END_MENU_TOKEN@*/, label: {
-                            VStack{
-                                Image(systemName: "plus")
-                                    .font(.title2)
-                                    .foregroundColor(.primary)
-                                    .padding(18)
-                                    .background(Circle().stroke(Color.gray))
-                                Text("New")
-                                    .foregroundColor(.primary)
-                            }
-                        })
-                    }
-                    .padding([.horizontal, .top])
-                })
-            }
-        })
+                ScrollView(.vertical, showsIndicators: false) {
+                         HStack(spacing: 15) {
+                             VStack {
+                                 Button(action: {}) {
+                                     VStack {
+                                         Image(systemName: "plus")
+                                             .font(.title2)
+                                             .foregroundColor(.primary)
+                                             .padding(18)
+                                             .background(Circle().stroke(Color.gray))
+                                         Text("New")
+                                             .foregroundColor(.primary)
+                                     }
+                                 }
+                             }
+                             
+                             ForEach(images, id: \.self) { imageName in
+                                 Image(imageName)
+                                     .resizable()
+                                     .scaledToFill()
+                                     .frame(width: 100, height: 100)
+                                     .cornerRadius(8)
+                             }
+                         }
+                         .padding()
+                     }
+                 }
+                }
+            )
+        }
     }
     
-    //extension UIColor {
-    //    convenience init(hex: String) {
-    //        let scanner = Scanner(string: hex)
-    //        scanner.scanLocation = 1 // Skip the '#' character
-    //        var rgbValue: UInt64 = 0
-    //        scanner.scanHexInt64(&rgbValue)
-    //
-    //        let r = CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0
-    //        let g = CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0
-    //        let b = CGFloat(rgbValue & 0x0000FF) / 255.0
-    //
-    //        self.init(red: r, green: g, blue: b, alpha: 1.0)
-    //    }
-    //}
-    //
-    //struct ContentView_Previews: PreviewProvider {
-    //    static var previews: some View {
-    //        ContentView()
-    //    }
-    //}
     
-}
+
 
 #Preview {
     ProfileView()

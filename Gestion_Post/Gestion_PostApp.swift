@@ -15,3 +15,13 @@ struct Gestion_PostApp: App {
         }
     }
 }
+
+
+func requestNotificationAuthorization() {
+    let center = UNUserNotificationCenter.current()
+    center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+        if let error = error {
+            print("Erreur lors de la demande d'autorisation des notifications : \(error)")
+        }
+    }
+}
