@@ -13,12 +13,9 @@ struct PostCell: View {
     @State private var isCommentSheetVisible = false
     @State private var isUserListVisible = false
     @State private var locationManager = CLLocationManager()
-    @State private var postIDToUpdate: String?
-	
-   @State var post: Post
+
     var body: some View {
         
-       
         VStack {
                     HStack {
                         Image("user")
@@ -32,6 +29,7 @@ struct PostCell: View {
                             .fontWeight(.semibold)
                         
                         Spacer()
+                        
                         Button {
                             isMenuVisible.toggle()
                         } label: {
@@ -42,13 +40,13 @@ struct PostCell: View {
                         .padding(.trailing, 8)
                         .actionSheet(isPresented: $isMenuVisible) {
                             ActionSheet(title: Text(""), buttons: [
-                                .destructive(Text("Delete Post"), action: {
-                                    deletePost(postID: post.id)
+                                .default(Text("Delete Post"), action: {
+                                    print("Delete Post")
                                 }),
                                 .default(Text("Update Post"), action: {
-                                    postIDToUpdate = post.id
-                                       navigateToUpdatePostView(postID: post.id) }),
-                                        .cancel()
+                                    print("Update Post")
+                                }),
+                                .cancel()
                             ])
                         }
                     }
@@ -56,13 +54,13 @@ struct PostCell: View {
             
             
                        
-            Text(post.title)
+                       Text("TITLE")
                     .font(.headline)
                     .padding(.horizontal)
                     .padding(.bottom, 8)
                     .background(Color(red: 124/255, green: 200/255, blue: 162/255))                     .foregroundColor(.white)
             
-            Image("user")
+            Image("event1")
                 .resizable()
                 .scaledToFit()
                 .frame(height: 400)
@@ -276,82 +274,6 @@ struct CommentListView: View {
         }
     }
 }
-                                         func navigateToUpdatePostView(postID: String) {
-                                             // Utilisez votre méthode de navigation préférée pour accéder à la page UpdatePostView
-                                             // Assurez-vous d'avoir une vue correspondante pour UpdatePostView dans votre code.
-
-                                             // Exemple avec NavigationLink :
-                                             NavigationLink(destination: UpdatePostView(postID: postID)) {
-                                                 EmptyView()
-                                             }
-                                         }
-
-func deletePost(postID: String) {
-    guard let url = URL(string: "http://localhost:5004/api/posts/delete-post") else {
-        print("Invalid URL")
-        return
-    }
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    
-    let parameters: [String: Any] = [
-        "postId": postID
-    ]
-    
-    guard let jsonData = try? JSONSerialization.data(withJSONObject: parameters)
-    
-    else {
-        print("Failed to serialize JSON data")
-        return
-    }
-    
-    request.httpBody = jsonData
-    
-    URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error = error {
-            print("Error: \(error)")
-            return
-        }
-        
-        guard let response = response as? HTTPURLResponse else {
-            print("Invalid response")
-            return
-        }
-        
-        if response.statusCode == 200 {
-            // Post deleted successfully
-            DispatchQueue.main.async {
-                // Update your local data or UI if needed
-            }
-        } else {
-            print("Failed to delete post. Status code: \(response.statusCode)")
-        }
-        if response.statusCode == 200 {
-                   // Post deleted successfully
-                   DispatchQueue.main.async {
-                       SuccessDAlert()
-                   }
-               } else {
-                   print("Failed to delete post. Status code: \(response.statusCode)")
-               }
-    }.resume()
-}
-
-func SuccessDAlert() {
-    let alertController = UIAlertController(title: "Success", message: "Post Deleted successfully!", preferredStyle: .alert)
-    
-    let okAction = UIAlertAction(title: "OK", style: .default) { (_) in
-        // Add any additional actions or code to be executed when the user taps "OK"
-    }
-    alertController.addAction(okAction)
-    
-    // Make sure to present the alert on the main queue
-    DispatchQueue.main.async {
-        UIApplication.shared.keyWindow?.rootViewController?.present(alertController, animated: true, completion: nil)
-    }
-}
 
 struct CommentRowView: View {
     var comment: String
@@ -376,14 +298,7 @@ struct CommentRowView: View {
         .padding(.horizontal)
     }
 }
-
-
-
-struct PostCell_Previews: PreviewProvider {
-    static var previews: some View {
-        // Create an instance of Post and pass it to PostCell
-        let samplePost = Post(id: "", title: "SELKEEEEEEEEEET", desc: "", image: " ", category: "", date: ""    , state: "")
-        return PostCell(post: samplePost)
+    #Preview {
+        PostCell()
     }
-}
 
