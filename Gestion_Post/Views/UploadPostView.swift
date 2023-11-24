@@ -8,6 +8,7 @@
 import SwiftUI
 import PhotosUI
 
+@available(iOS 16.0, *)
 struct UploadPostView: View {
     @State private var caption = ""
     @State private var imagePickerPresented = false
@@ -50,6 +51,4 @@ struct UploadPostView: View {
     }
 }
 
-#Preview {
-    UploadPostView()
-}
+

@@ -28,6 +28,8 @@ struct ProfileTabView: View {
     
 }
 
-#Preview {
-    ProfileTabView()
+struct ProfileTabView_Previews: PreviewProvider {
+    static var previews: some View {
+        ProfileTabView()
+    }
 }

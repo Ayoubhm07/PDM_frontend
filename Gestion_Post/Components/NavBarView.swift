@@ -48,6 +48,8 @@ struct NavBarView: View {
         }
 }
 
-#Preview {
-    NavBarView()
+struct NavBarView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavBarView()
+    }
 }

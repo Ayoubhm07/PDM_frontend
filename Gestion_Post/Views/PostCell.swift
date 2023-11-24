@@ -8,14 +8,34 @@
 import SwiftUI
 import UserNotifications
 import CoreLocation
+@available(iOS 17.0, *)
 struct PostCell: View {
+    @State private var isLiked = false
+
     @State private var isMenuVisible = false
     @State private var isCommentSheetVisible = false
     @State private var isUserListVisible = false
     @State private var locationManager = CLLocationManager()
+    @State private var postIDToUpdate: String?
+    @State private var isLocationViewActive = false
+    @State private var isUpdatePostViewActive = false
 
+   @State var post: Post
+    func sharePost() {
+        let postText = """
+            Title: \(post.title)
+            Description: \(post.desc)
+            Image: \(post.image)
+            Category: \(post.category)
+            Date: \(post.date)
+            State: \(post.state)
+            """
+        let activityViewController = UIActivityViewController(activityItems: [postText], applicationActivities: nil)
+        UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+    }
     var body: some View {
         
+       
         VStack {
                     HStack {
                         Image("user")
@@ -29,7 +49,6 @@ struct PostCell: View {
                             .fontWeight(.semibold)
                         
                         Spacer()
-                        
                         Button {
                             isMenuVisible.toggle()
                         } label: {
@@ -40,13 +59,18 @@ struct PostCell: View {
                         .padding(.trailing, 8)
                         .actionSheet(isPresented: $isMenuVisible) {
                             ActionSheet(title: Text(""), buttons: [
-                                .default(Text("Delete Post"), action: {
-                                    print("Delete Post")
+                                .destructive(Text("Delete Post"), action: {
+                                    deletePost(postID: post.id)
                                 }),
                                 .default(Text("Update Post"), action: {
-                                    print("Update Post")
-                                }),
-                                .cancel()
+                                    postIDToUpdate = post.id
+                                    NavigationLink(
+                                        destination: UpdatePostView(postID: postIDToUpdate ?? ""),
+                                        isActive: $isUpdatePostViewActive,
+                                        label: { EmptyView() }
+                                    )
+                                    .hidden() }),
+                                        .cancel()
                             ])
                         }
                     }
@@ -54,13 +78,13 @@ struct PostCell: View {
             
             
                        
-                       Text("TITLE")
+            Text(post.title)
                     .font(.headline)
                     .padding(.horizontal)
                     .padding(.bottom, 8)
                     .background(Color(red: 124/255, green: 200/255, blue: 162/255))                     .foregroundColor(.white)
             
-            Image("event1")
+            Image(post.image)
                 .resizable()
                 .scaledToFit()
                 .frame(height: 400)
@@ -69,17 +93,28 @@ struct PostCell: View {
             
             HStack(spacing:16){
                 Button(action: {
-                    locationManager.requestWhenInUseAuthorization()
-                    showLocationNotification()
+                    isLocationViewActive = true
                 }) {
                     Image(systemName: "location.circle")
                         .imageScale(.large)
                 }
+                .background(
+                    NavigationLink(
+                        destination: LocationView(),
+                        isActive: $isLocationViewActive,
+                        label: {
+                            EmptyView()
+                        }
+                    )
+                    
+                )
             
-                Button {
-                } label: {
-                    Image(systemName: "heart")
+                Button(action: {
+                    isLiked.toggle()
+                }) {
+                    Image(systemName: isLiked ? "heart.fill" : "heart")
                         .imageScale(.large)
+                        .foregroundColor(isLiked ? .red : .primary)
                 }
                
                 Button {
@@ -88,9 +123,9 @@ struct PostCell: View {
                     Image(systemName: "bubble.right")
                         .imageScale(.large)
                 }
-                
+                 
                 Button {
-                    print("Share Post")
+                    sharePost()
                 } label: {
                     Image(systemName: "paperplane")
                         .imageScale(.large)
@@ -173,6 +208,7 @@ struct UserListView: View {
     }
 }
 
+
 func showLocationNotification() {
     let center = UNUserNotificationCenter.current()
     let content = UNMutableNotificationContent()
@@ -220,16 +256,18 @@ struct UserRowView: View {
 
 
 struct CommentListView: View {
-    @State private var userComment = ""
+    @State private var isShowingAddCommentModal = false
+    @State private var commentMessage = ""
+    @State private var comments: [Comment] = []
 
     var body: some View {
         VStack {
             HStack {
                 Spacer()
-                
-                Button {
-                    // Action pour ajouter le commentaire
-                } label: {
+
+                Button(action: {
+                    isShowingAddCommentModal = true
+                }) {
                     Text("Add Comment")
                         .font(.headline)
                         .padding()
@@ -238,30 +276,50 @@ struct CommentListView: View {
                         .cornerRadius(10)
                 }
                 .padding()
+                .sheet(isPresented: $isShowingAddCommentModal, content: {
+                    AddCommentView(commentMessage: $commentMessage, addComment: addComment)
+                })
             }
-            
+
             ScrollView {
                 VStack(spacing: 8) {
-                    ForEach(0..<10) { index in
-                        CommentRowView(comment: "Commentaire \(index + 1)")
-                        Spacer()
+                    ForEach(comments) { comment in
+                        HStack(alignment: .top) {
+                            Image("user")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 40, height: 40)
+                                .clipShape(Circle())
+                            
+                            VStack(alignment: .leading) {
+                                Text(comment.userName)
+                                    .font(.headline)
+                                Text(comment.message)
+                                    .font(.body)
+                            }
+                            
+                            Spacer() // Pousse le contenu vers la gauche
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
                     }
                 }
             }
-            
+
             HStack {
                 Image("user")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 40, height: 40)
                     .clipShape(Circle())
-                
-                TextField("Votre commentaire", text: $userComment)
+
+                TextField("Your comment", text: $commentMessage)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                Button {
-                    // Action pour ajouter le commentaire de l'utilisateur
-                } label: {
+
+                Button(action: {
+                    addComment()
+                }) {
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(.green)
                         .font(.headline)
@@ -269,36 +327,186 @@ struct CommentListView: View {
                 }
             }
             .padding(.horizontal)
-            
+
             Spacer()
         }
     }
+
+    func addComment() {
+        // Vérification que le champ du message n'est pas vide
+        guard !commentMessage.isEmpty else {
+            return
+        }
+
+        let newComment = Comment(message: commentMessage, userName: "AYOUB")
+        comments.append(newComment)
+
+        // Réinitialisation de la valeur de la variable d'état
+        commentMessage = ""
+    }
+}
+
+struct Comment: Identifiable {
+    let id = UUID()
+    let message: String
+    let userName: String
 }
 
 struct CommentRowView: View {
-    var comment: String
-    
+    let comment: Comment
+
     var body: some View {
         HStack {
             Image("user")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 30, height: 30)
+                .frame(width: 40, height: 40)
                 .clipShape(Circle())
-            
+
             VStack(alignment: .leading) {
-                Text("Nom de l'utilisateur")
+                Text(comment.userName)
                     .font(.headline)
-                Text(comment)
+                Text(comment.message)
                     .font(.body)
             }
-            
-            Spacer()
         }
-        .padding(.horizontal)
+        .padding()
+        .background(Color.gray.opacity(0.2))
+        .cornerRadius(10)
     }
 }
-    #Preview {
-        PostCell()
+
+struct AddCommentView: View {
+    @Binding var commentMessage: String
+    let addComment: () -> Void
+
+    var body: some View {
+        VStack {
+            TextField("Message", text: $commentMessage)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+
+            Button(action: {
+                addComment()
+            }) {
+                Text("Submit")
+                    .font(.headline)
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(Color.green)
+                    .cornerRadius(10)
+            }
+            .padding()
+        }
+        .padding()
     }
+}
+                                         func navigateToUpdatePostView(postID: String) {
+                                
+                                             NavigationLink(destination: UpdatePostView(postID: postID)) {
+                                                 
+                                             }
+                                         }
+
+func deletePost(postID: String) {
+    guard let url = URL(string: "http://localhost:5004/api/posts/delete-post") else {
+        print("Invalid URL")
+        return
+    }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    
+    let parameters: [String: Any] = [
+        "postId": postID
+    ]
+    
+    guard let jsonData = try? JSONSerialization.data(withJSONObject: parameters)
+    
+    else {
+        print("Failed to serialize JSON data")
+        return
+    }
+    
+    request.httpBody = jsonData
+    
+    URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+            print("Error: \(error)")
+            return
+        }
+        
+        guard let response = response as? HTTPURLResponse else {
+            print("Invalid response")
+            return
+        }
+        
+        if response.statusCode == 200 {
+            // Post deleted successfully
+            DispatchQueue.main.async {
+                // Update your local data or UI if needed
+            }
+        } else {
+            print("Failed to delete post. Status code: \(response.statusCode)")
+        }
+        if response.statusCode == 200 {
+                   // Post deleted successfully
+                   DispatchQueue.main.async {
+                       SuccessDAlert()
+                   }
+               } else {
+                   print("Failed to delete post. Status code: \(response.statusCode)")
+               }
+    }.resume()
+}
+
+func SuccessDAlert() {
+    let alertController = UIAlertController(title: "Success", message: "Post Deleted successfully!", preferredStyle: .alert)
+    
+    let okAction = UIAlertAction(title: "OK", style: .default) { (_) in
+        // Add any additional actions or code to be executed when the user taps "OK"
+    }
+    alertController.addAction(okAction)
+    
+    // Make sure to present the alert on the main queue
+    DispatchQueue.main.async {
+        UIApplication.shared.keyWindow?.rootViewController?.present(alertController, animated: true, completion: nil)
+    }
+}
+
+//struct CommentRowView: View {
+//    var comment: String
+//    
+//    var body: some View {
+//        HStack {
+//            Image("user")
+//                .resizable()
+//                .scaledToFit()
+//                .frame(width: 30, height: 30)
+//                .clipShape(Circle())
+//            
+//            VStack(alignment: .leading) {
+//                Text("Nom de l'utilisateur")
+//                    .font(.headline)
+//                Text(comment)
+//                    .font(.body)
+//            }
+//            
+//            Spacer()
+//        }
+//        .padding(.horizontal)
+//    }
+//}
+
+
+
+@available(iOS 17.0, *)
+struct PostCell_Previews: PreviewProvider {
+    static var previews: some View {
+        // Create an instance of Post and pass it to PostCell
+        let samplePost = Post(id: "", title: "SELKEEEEEEEEEET", desc: "", image: "IMG_3017", category: "", state: "")
+        return PostCell(post: samplePost)
+    }
+}
 

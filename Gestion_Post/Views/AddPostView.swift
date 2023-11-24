@@ -1,11 +1,38 @@
 import SwiftUI
+import Combine
+import UIKit
+import AVKit
+
+
+
+
+
 
 struct AddPostView: View {
+    
+
+
+    
+
     @State private var isScrolling = false
     @State private var privacySelected = false
-    @State private var title = ""
-    @State private var description = ""
+    
+    @State private var title:String = ""
+    @State private var description:String = ""
+  
+    @State private var privacy: String = ""
+    @State private var isRequesting = false
+    
+    @State private var isImagePickerPresented = false
+    @State private var isShowingImagePicker = false
+    @State private var selectedImageURL: URL?
+    @State private var selectedImage: Image?
+    @State private var selectedImageName: String?
 
+    private let addPostURL = URL(string: "http://localhost:5004/api/posts/add-post")!
+    
+
+    
     var body: some View {
         VStack {
             VStack {
@@ -40,32 +67,34 @@ struct AddPostView: View {
                                    .padding(.horizontal, 28)
                                    
                     if privacySelected {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Button(action: {
-                                // Handle private option selection
-                            }) {
-                                Image(systemName: "lock")
-                                Text("Private")
-                                    .foregroundColor(.black)
-                                
-                            }
-                            Button(action: {
-                                // Handle public option selection
-                            }) {
-                                Image(systemName: "globe")
-                                Text("Public")
-                                    .foregroundColor(.black)
-                            }
-                            Button(action: {
-                                // Handle friends only option selection
-                            }) {
-                                Image(systemName: "person.2")
-                                Text("Friends Only")
-                                    .foregroundColor(.black)
-                            }
-                        }
-                        .padding(.leading, 28)
-                    }
+                          VStack(alignment: .leading, spacing: 8) {
+                              Button(action: {
+                                  privacy = "Private"
+                                  privacySelected.toggle()
+                              }) {
+                                  Image(systemName: "lock")
+                                  Text("Private")
+                                      .foregroundColor(.black)
+                              }
+                              Button(action: {
+                                  privacy = "Public"
+                                  privacySelected.toggle()
+                              }) {
+                                  Image(systemName: "globe")
+                                  Text("Public")
+                                      .foregroundColor(.black)
+                              }
+                              Button(action: {
+                                  privacy = "Friends Only"
+                                  privacySelected.toggle()
+                              }) {
+                                  Image(systemName: "person.2")
+                                  Text("Friends Only")
+                                      .foregroundColor(.black)
+                              }
+                          }
+                          .padding(.leading, 28)
+                      }
                                
                 }
                 .frame(height: 45)
@@ -92,147 +121,169 @@ struct AddPostView: View {
                         .padding(.horizontal)
                         .padding(.top, 16)
                     
-                     ScrollView(.horizontal, showsIndicators: false){
-                            LazyHStack(spacing: 16){
-                    VStack(alignment: .leading, spacing: 0) {
+                    
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 1) {
+                                HStack {
+                                    Button(action: {
+                                      isImagePickerPresented.toggle()
+                                    }) {
+                                        Image("camera")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                    }
+                                    .frame(width: 38, height: 38)
+                                    .background(RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.white))
+                                    .sheet(isPresented: $isImagePickerPresented) {
+                                        ImagePicker(selectedImage: $selectedImage, selectedImageName: $selectedImageName, selectedImageURL: Binding.constant(nil))
+                                    }
+                                    Text("Add Media")
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color.black)
+                                        .minimumScaleFactor(0.5)
+                                        .multilineTextAlignment(.leading)
+                                        .frame(width: 72, height: 38)
+                                }
+                                .frame(width: 140, alignment: .leading)
+                                .padding(.top, 28)
+//                                .onAppear {
+//                                    post = Post(id: "", title: title, desc: description, image: "", category: "", date: "", state: privacy)
+//                                    // Sauvegarder le média dans le dossier Assets lorsqu'il est sélectionné
+//                                    if let selectedMedia = selectedMediaType {
+//                                        switch selectedMedia {
+//                                        case .image(let uiImage):
+//                                            selectedImage = Image(uiImage: uiImage)
+//                                            selectedImage?
+//                                                .resizable()
+//                                                .scaledToFit()
+//                                                .frame(height: 200)
+//                                                .onAppear {
+//                                                    saveMediaToAssets(media: selectedMedia) { filename in
+//                                                        if let filename = filename {
+//                                                            // Mettez à jour l'objet Post avec le nom du fichier
+//                                                            self.post.image = filename
+//                                                        }
+//                                                    }
+//                                                }
+//                                        case .video(let videoURL):
+//                                            selectedVideo = videoURL
+//                                            VideoPlayer(player: AVPlayer(url: videoURL))
+//                                                .frame(height: 200)
+//                                                .onAppear {
+//                                                    saveMediaToAssets(media: selectedMedia) { filename in
+//                                                        if let filename = filename {
+//                                                            // Mettez à jour l'objet Post avec le nom du fichier
+//                                                            self.post.image = filename
+//                                                        }
+//                                                    }
+//                                                }
+//                                        }
+//                                        
+//                                        
+//                                    }
+//                                }
 
-                        HStack {
-                            Button(action: {
-                            }) {
-                                Image("camera")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40,height: 40)
-                            }
-                            .frame(width: 38, height: 38)
-                            .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white))
-                            
-                            Text("Add Photo")
-                                .fontWeight(.medium)
-                                .foregroundColor(Color.black)
-                                .minimumScaleFactor(0.5)
-                                .multilineTextAlignment(.leading)
-                                .frame(width: 72, height: 38)
-                        }
-                        .frame(width: 140,alignment: .leading)
-                        .padding(.top, 28)
-                        HStack {
-                            Button(action: {}, label: {
-                                Image("video")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40,height: 40)
                                 
-                                })
-                                .frame(width: 38, height: 38)
-                                .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white))
-                            Text("Add Video")
-                                .fontWeight(.medium)
-                                .foregroundColor(Color.black)
-                                .minimumScaleFactor(0.5)
-                                .multilineTextAlignment(.leading)
-                                .frame(width: 72, height: 38)
+                                HStack {
+                                    Button(action: {}) {
+                                        Image(systemName: "tag.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                            .clipShape(Circle())
+                                    }
+                                    .frame(width: 38, height: 38)
+                                    .background(RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.white))
+                                    
+                                    Text("Tag People")
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color.black)
+                                        .minimumScaleFactor(0.5)
+                                        .multilineTextAlignment(.leading)
+                                        .frame(width: 72, height: 38)
                                 }
-                        .frame(width: 140,alignment: .leading)
-                        .padding(.top, 28)
-                        HStack {
-                            Button(action: {}, label: {
-                                Image(systemName: "tag.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40,height: 40)
-                                    .clipShape(/*@START_MENU_TOKEN@*/Circle()/*@END_MENU_TOKEN@*/)
-                                })
-                                .frame(width: 38, height: 38)
-                                .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white))
-                            Text("Tag People")
-                                .fontWeight(.medium)
-                                .foregroundColor(Color.black)
-                                .minimumScaleFactor(0.5)
-                                .multilineTextAlignment(.leading)
-                                .frame(width: 72, height: 38)
+                                .frame(width: 140, alignment: .leading)
+                                .padding(.top, 28)
+                                
+                                HStack {
+                                    Button(action: {}) {
+                                        Image("music")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                    }
+                                    .frame(width: 38, height: 38)
+                                    .background(RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.white))
+                                    
+                                    Text("Music")
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color.black)
+                                        .minimumScaleFactor(0.5)
+                                        .multilineTextAlignment(.leading)
+                                        .frame(width: 72, height: 38)
                                 }
-                        .frame(width: 140,alignment: .leading)
-                        .padding(.top, 28)
-                        HStack {
-                            Button(action: {}, label: {
-                                Image("music")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40,height: 40)
-                                })
-                                .frame(width: 38, height: 38)
-                                .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white))
-                            Text("Music")
-                                .fontWeight(.medium)
-                                .foregroundColor(Color.black)
-                                .minimumScaleFactor(0.5)
-                                .multilineTextAlignment(.leading)
-                                .frame(width: 72, height: 38)
+                                .frame(width: 140, alignment: .leading)
+                                .padding(.top, 28)
+                                
+                                HStack {
+                                    Button(action: {}) {
+                                        Image("feeling")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                    }
+                                    .frame(width: 38, height: 38)
+                                    .background(RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.white))
+                                    
+                                    Text("Feeling")
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color.black)
+                                        .minimumScaleFactor(0.5)
+                                        .multilineTextAlignment(.leading)
+                                        .frame(width: 72, height: 38)
                                 }
-                        .frame(width: 140,alignment: .leading)
-                        .padding(.top, 28)
-                        HStack {
-                            Button(action: {}, label: {
-                                Image("feeling")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40,height: 40)
-                            
-                                })
-                                .frame(width: 38, height: 38)
-                                .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white))
-                            Text("Feeling")
-                                .fontWeight(.medium)
-                                .foregroundColor(Color.black)
-                                .minimumScaleFactor(0.5)
-                                .multilineTextAlignment(.leading)
-                                .frame(width: 72, height: 38)
+                                .frame(width: 140, alignment: .leading)
+                                .padding(.top, 28)
+                                
+                                HStack {
+                                    Button(action: {}) {
+                                        Image("check")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                    }
+                                    .frame(width: 38, height: 38)
+                                    .background(RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.white))
+                                    
+                                    Text("Check In")
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color.black)
+                                        .minimumScaleFactor(0.5)
+                                        .multilineTextAlignment(.leading)
+                                        .frame(width: 72, height: 38)
                                 }
-                        .frame(width: 140,alignment: .leading)
-                        .padding(.top, 28)
-                        HStack {
-                            Button(action: {}, label: {
-                                Image("check")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40,height: 40)
-                                })
-                                .frame(width: 38, height: 38)
-                                .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white))
-                            Text("Check In")
-                                .fontWeight(.medium)
-                                .foregroundColor(Color.black)
-                                .minimumScaleFactor(0.5)
-                                .multilineTextAlignment(.leading)
-                                .frame(width: 72, height: 38)
-                                }
-                        .frame(width: 140,alignment: .leading)
-                        .padding(.top, 28)
-                                                
+                                .frame(width: 140, alignment: .leading)
+                                .padding(.top, 28)
+                                
+                            }
+                        }
+                        .padding()
                     }
-//                    .opacity(isScrolling ? 1 : 0)
 
                 }
-                .padding(.horizontal, 16)
-                               .animation(.easeInOut)
-                               .onAppear {
-                                   isScrolling = false
-                               }
-                               .onDisappear {
-                                   isScrolling = true
-                               }
-                }
-                }
-                Spacer()
+                
+     
+                        	
+                let post = Post(id: "", title: title, desc: description, image: selectedImageName ?? "", category: "", state: privacy)
                 Button(action: {
-                    // Action for the "Post" button
+                    addPost(post: post)
                 }) {
                     HStack {
                         Text("Post")
@@ -252,12 +303,136 @@ struct AddPostView: View {
                 .padding(.horizontal, 28)
                 
             }
+                .padding(.horizontal, 16)
+                               .animation(.easeInOut)
+                               .onAppear {
+                                   isScrolling = false
+                               }
+                               .onDisappear {
+                                   isScrolling = true
+                               }
+                }
+                }
+             
+                
+        }
+
+
+func addPost(post: Post) {
+    guard let url = URL(string: "http://localhost:5004/api/posts/add-post") else { return }
+    
+    var urlRequest = URLRequest(url: url)
+    urlRequest.httpMethod = "POST"
+    urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    
+    // Create a new dictionary to represent the request body
+    let requestBody: [String: String] = [
+        "title": post.title,
+        "desc": post.desc,
+        "image": post.image,
+        "category": post.category,
+        "date": post.date,
+        "state": post.state
+    ]
+    
+    do {
+        let encodedRequestBody = try JSONEncoder().encode(requestBody)
+        urlRequest.httpBody = encodedRequestBody
+    } catch {
+        print("Error encoding post data: \(error)")
+        // Handle the post data encoding error (e.g., display an alert)
+        return
+    }
+    
+    URLSession.shared.dataTask(with: urlRequest) { data, response, error in
+        if let data = data, let response = response as? HTTPURLResponse, response.statusCode == 201 {
+            showSuccessAlert()
+        } else {
+            print("Error posting post: \(error?.localizedDescription ?? "Unknown error")")
+            //  display an alert
+        }
+    }.resume()
+}
+func showSuccessAlert() {
+    let alertController = UIAlertController(title: "Success", message: "Post added successfully!", preferredStyle: .alert)
+    
+    let okAction = UIAlertAction(title: "OK", style: .default) { (_) in
+        // Add any additional actions or code to be executed when the user taps "OK"
+    }
+    alertController.addAction(okAction)
+    
+    // Make sure to present the alert on the main queue
+    DispatchQueue.main.async {
+        UIApplication.shared.keyWindow?.rootViewController?.present(alertController, animated: true, completion: nil)
+    }
+}
+
+
+
+
+
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var selectedImage: Image?
+    @Binding var selectedImageName: String?
+    @Binding var selectedImageURL: URL?  // Add this line
+    @Environment(\.presentationMode) var presentationMode
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        var parent: ImagePicker
+        
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+        func saveImageToDocumentsDirectory(image: UIImage, imageName: String) -> String? {
+            guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                return nil
+            }
+
+            let fileURL = documentsDirectory.appendingPathComponent(imageName)
+            if let imageData = image.jpegData(compressionQuality: 1.0) {
+                do {
+                    try imageData.write(to: fileURL)
+                    return fileURL.path
+                } catch {
+                    print("Error saving image data: \(error)")
+                    return nil
+                }
+            }
+            return nil
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let uiImage = info[.originalImage] as? UIImage {
+                parent.selectedImage = Image(uiImage: uiImage)
+                parent.selectedImageURL = URL(fileURLWithPath: saveImageToDocumentsDirectory(image: uiImage, imageName: "dynamic_image.jpg") ?? "")
+                
+                // Get the image URL
+                if let imageUrl = info[.imageURL] as? URL {
+                                parent.selectedImageName = imageUrl.deletingPathExtension().lastPathComponent
+                            }
+            }
+            parent.presentationMode.wrappedValue.dismiss()
         }
     }
 }
+
+
 
 struct AddPostView_Previews: PreviewProvider {
     static var previews: some View {
         AddPostView()
     }
 }
+
